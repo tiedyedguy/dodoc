@@ -1,0 +1,76 @@
+
+        <!DOCTYPE html>
+<html>
+<head>
+<title>Combining 2 Diagrams with Different Layouts</title>
+<!-- Copyright 1998-2016 by Northwoods Software Corporation. -->
+<meta charset="UTF-8">
+<script src="https://unpkg.com/gojs@2.2.20/release/go.js"></script>
+<script id="code">
+  function init() {
+    var $ = go.GraphObject.make;  // for conciseness in defining templates
+
+    myDiagram = $(go.Diagram, "myDiagramDiv",
+                  {
+                    initialContentAlignment: go.Spot.Center,
+                    layout: $(go.GridLayout, { wrappingColumn: 1 }),
+                    "undoManager.isEnabled": true
+                  });
+
+    myDiagram.nodeTemplate =
+      $(go.Node, "Auto",
+        $(go.Shape, "RoundedRectangle",
+          new go.Binding("fill", "color")),
+        $(go.TextBlock, { margin: 3 },
+          new go.Binding("text", "key"))
+      );
+
+    myDiagram.groupTemplateMap.add("FD",
+      $(go.Group, "Auto",
+        { layout: $(go.ForceDirectedLayout) },
+        $(go.Shape, { fill: "white", stroke: "lightgray" }),
+        $(go.Placeholder, { padding: 10 })
+      ));
+
+    myDiagram.groupTemplateMap.add("LD",
+      $(go.Group, "Auto",
+        { layout: $(go.LayeredDigraphLayout) },
+        $(go.Shape, { fill: "white", stroke: "lightgray" }),
+        $(go.Placeholder, { padding: 10 })
+      ));
+
+    myDiagram.model = new go.GraphLinksModel(
+    [
+      { key: "FD", isGroup: true, category: "FD" },
+      { key: "LD", isGroup: true, category: "LD" },
+      { key: "Alpha", color: "lightblue", group: "FD" },
+      { key: "Beta", color: "orange", group: "FD" },
+      { key: "Gamma", color: "lightgreen", group: "FD" },
+      { key: "Delta", color: "pink", group: "FD" },
+      { key: "Alpha2", color: "lightblue", group: "LD" },
+      { key: "Beta2", color: "orange", group: "LD" },
+      { key: "Gamma2", color: "lightgreen", group: "LD" },
+      { key: "Delta2", color: "pink", group: "LD" }
+    ],
+    [
+      { from: "Alpha", to: "Beta" },
+      { from: "Alpha", to: "Gamma" },
+      { from: "Beta", to: "Beta" },
+      { from: "Gamma", to: "Delta" },
+      { from: "Delta", to: "Alpha" },
+      { from: "Delta", to: "Alpha2" },
+      { from: "Alpha2", to: "Beta2" },
+      { from: "Alpha2", to: "Gamma2" },
+      { from: "Beta2", to: "Beta2" },
+      { from: "Gamma2", to: "Delta2" },
+      { from: "Delta2", to: "Alpha2" }
+    ]);
+  }
+</script>
+</head>
+<body onload="init();">
+<div id="sample">
+  <div id="myDiagramDiv" style="border: solid 1px black; width:400px; height:600px"></div>
+</div>
+</body>
+</html>

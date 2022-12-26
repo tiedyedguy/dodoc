@@ -2,34 +2,69 @@
   <!DOCTYPE html>
   <html lang="en">
   <body>
-  <script src="https://unpkg.com/gojs@2.2.20/release/go.js"></script>
+ <script src="https://unpkg.com/gojs@2.2.20/release/go.js"></script> 
 
 
-<div id="sample">
+<div id="sample" style="position:relative">
   <!-- The DIV for the Diagram needs an explicit size or else we won't see anything.
        This also adds a border to help see the edges of the viewport. -->
-  <div id="myDiagramDiv" style="border: 1px solid black; width: 800px; height: 800px; position: relative; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);"><canvas tabindex="0" width="398" height="398" style="position: absolute; top: 0px; left: 0px; z-index: 2; user-select: none; touch-action: none; width: 398px; height: 398px;">This text is displayed if your browser does not support the Canvas HTML element.</canvas><div style="position: absolute; overflow: auto; width: 398px; height: 398px; z-index: 1;"><div style="position: absolute; width: 1px; height: 1px;"></div></div></div>
-  
-
-
-
-
-  <button onClick="addPlaintiff()">Add Plaintiff</button>
-  <button onClick = "addDefendant()">Add Defendant</button><br>
+      <span id="casename" style="position:absolute;z-index:9;top:0;margin-left:auto;margin-right:auto;left:0;right:0;text-align:center;"></span>
+      <div id="pandd" style="Position:absolute;z-index:9;left:0;bottom: 0;;display:flex;flex-direction: row;gap:50px">
+        <div id="ps"></div>
+        <div id="ds"></div>
+      </div>
+  <div id="myDiagramDiv" style="border: 1px solid black; width: 100%; height: 1000px; position: relative; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);">
+  <canvas tabindex="0" width="398" height="398" style="position: absolute; top: 0px; left: 0px; z-index: 2; user-select: none; touch-action: none; width: 398px; height: 398px;">This text is displayed if your browser does not support the Canvas HTML element.</canvas><div style="position: absolute; overflow: auto; width: 398px; height: 398px; z-index: 1;">
+    <div style="position: absolute; width: 1px; height: 1px;">
+    </div>
+  </div>
+</div>
+</div>
+  <br>
+  <input id ='inputcase' placeholder="Type Case Name Here" type="text"><button onClick="updateCase()">Set Case Name</button>
+  <br><br>
+  <input id ='inputplt' placeholder="Type Plaintiff Name Here" type="text"><button onClick="addPlaintiff()">Add Plaintiff</button><br>
+  <input id ='inputdef' placeholder="Type Defendant Name Here" type="text"><button onClick = "addDefendant()">Add Defendant</button><br>
   <br>
   Claim Between <select id="party1"></select> and <select id="party2"></select><br>
   <button onclick="addClaim('normal')">Add Claim</button>
   <button onclick="addClaim('cross')">Add CrossClaim</button>
   <button onclick="addClaim('counter')">Add CounterClaim</button>
   <button onclick="addClaim('3rd')">Add 3rdPartyClaim</button>
-
+  <br><br>
+  <button onclick="demo()">Show a Demo of a case!</button>
 
 
 <script id="code">
 var $ = go.GraphObject.make;
 const myDiagram =
-  new go.Diagram("myDiagramDiv",  // create a Diagram for the HTML Div element
+  new go.Diagram("myDiagramDiv",  
+      {contentAlignment: go.Spot.Center,
+        layout: $(go.GridLayout, { wrappingColumn: 3,  alignment: go.GridLayout.Position})},
     { "undoManager.isEnabled": true });  // enable undo & redo
+
+//  layout: $(go.GridLayout, { wrappingColumn: 2, spacing: new go.Size(75,75)})},// create a Diagram for the HTML Div element
+
+    myDiagram.groupTemplateMap.add("PLT",
+      $(go.Group, "Auto",
+        { layout: $(go.LayeredDigraphLayout) },
+        $(go.Shape, { fill: "white", stroke: "lightgray" }),
+        $(go.Placeholder, { padding: 10 })
+      ));
+      myDiagram.groupTemplateMap.add("V",
+      $(go.Group, "Auto",
+        { 
+          layout: $(go.LayeredDigraphLayout) },
+        $(go.Shape, { fill: "white", stroke: "lightgray" }),
+        $(go.Placeholder, { padding: 10 })
+      ));
+
+    myDiagram.groupTemplateMap.add("DEF",
+      $(go.Group, "Auto",
+        { layout: $(go.CircularLayout) },
+        $(go.Shape, { fill: "white", stroke: "lightgray" }),
+        $(go.Placeholder, { padding: 10 })
+      ));
 
 // define a simple Node template
 myDiagram.nodeTemplate =
@@ -43,6 +78,7 @@ myDiagram.nodeTemplate =
 
 myDiagram.linkTemplate =
   $(go.Link,
+ 
     { curve: go.Link.Bezier },  // Bezier curve
     $(go.Shape,new go.Binding("strokeDashArray", "dash")),
     $(go.Shape, { toArrow: "Standard" })
@@ -52,16 +88,15 @@ plaintiffs = 0
 defendants = 0
 
 // create the model data that will be represented by Nodes and Links
-nodes =  [
-    
-  ];
-links =  [
-  ];
-myDiagram.model = new go.GraphLinksModel(nodes,links);
+
+myDiagram.model = new go.GraphLinksModel([{key: "PLT", isGroup: true, category: "PLT"},{key:"V", isGroup:true,category: "V"},{key: "DEF", isGroup:true, category: "DEF"}]);
+myDiagram.model.addNodeData({key:"v.", color:"lightgrey",group:"V"});
 
 
-function updatemyDiagram() {
-  myDiagram.model = new go.GraphLinksModel(nodes,links);
+function updateCase() {
+
+  document.getElementById('casename').innerHTML = "Case: " + document.getElementById('inputcase').value;
+
 }
 
 
@@ -85,9 +120,9 @@ function addClaim(typeOfClaim) {
         break;
   }
  
-  links.push(linkToDo)
-  console.log(links);
-  updatemyDiagram();
+  myDiagram.model.addLinkData(linkToDo)
+
+ 
 
 }
 
@@ -95,31 +130,128 @@ function addClaim(typeOfClaim) {
 function addPlaintiff() {
   console.log("Adding plaintiff");
   plaintiffs = plaintiffs + 1
-  nodes.push({key:"Plt" + plaintiffs, color:"lightgreen"});
+
+  myDiagram.model.addNodeData({key:"Plt" + plaintiffs, color:"lightgreen",group:"PLT"});
+  
   let newOption = new Option('Plt' + plaintiffs)
   select = document.querySelector('#party1');
   select.add(newOption,undefined);
   let newOption2 = new Option('Plt' + plaintiffs)
   select = document.querySelector('#party2');
   select.add(newOption2,undefined);
+  document.getElementById('ps').innerHTML = document.getElementById('ps').innerHTML + "Plt" + plaintiffs + ": " + document.getElementById('inputplt').value + "<br>";
   
-  updatemyDiagram();
 }
 
 function addDefendant() {
   console.log("Adding defendant");
   defendants = defendants + 1
-  nodes.push({key:"Def" + defendants, color:"lightblue"});
+ 
+  myDiagram.model.addNodeData({key:"Def" + defendants, color:"lightblue",group:"DEF"});
+  
   let newOption = new Option('Def' + defendants)
   select = document.querySelector('#party1');
   select.add(newOption,undefined);
   let newOption2 = new Option('Def' + defendants)
   select = document.querySelector('#party2');
   select.add(newOption2,undefined);
-  updatemyDiagram();
+  document.getElementById('ds').innerHTML = document.getElementById('ds').innerHTML + "Def" + defendants + ": " + document.getElementById('inputdef').value + "<br>";
+  
+  
 }
 
+function demo() {
+  
+  myDiagram.model = new go.GraphLinksModel(
+    [
+      {key: "PLT", isGroup: true, category: "PLT"},
+      {key:"V", isGroup:true,category: "V"},
+      {key: "DEF", isGroup:true, category: "DEF"},
+      {key:"v.", color:"lightgrey",group:"V"},
+      { key: "Plt1", color: "lightgreen", group: "PLT" },
+      { key: "Def1", color: "lightblue", group: "DEF" },
+      { key: "Def2", color: "lightblue", group: "DEF" },
+      { key: "Def3", color: "lightblue", group: "DEF" },
+      { key: "Def4", color: "lightblue", group: "DEF" },
+      { key: "Def5", color: "lightblue", group: "DEF" },
+      
+    ],
+    [
+      { from: "Plt1", to: "Def1" },
+      { from: "Plt1", to: "Def2" },
+      { from: "Plt1", to: "Def3" },
+      { from: "Plt1", to: "Def4" },
+      { from: "Def1", to: "Def4", dash: [3,2]},
+      { from: "Def2", to: "Def4", dash: [3,2]},
+      { from: "Def3", to: "Def4", dash: [3,2]},
+      { from: "Def4", to: "Def1", dash: [3,2]},
+      { from: "Def4", to: "Def2", dash: [3,2]},
+      { from: "Def4", to: "Def3", dash: [3,2]},
+      { from: "Def2", to: "Def5", dash: [1,4]},
+      { from: "Def5", to: "Def2", dash: [10,5]}
+      
+    ]);
 
+    plaintiffs = plaintiffs + 1
+
+
+
+    let newOption = new Option('Plt' + plaintiffs)
+    select = document.querySelector('#party1');
+    select.add(newOption,undefined);
+    let newOption2 = new Option('Plt' + plaintiffs)
+    select = document.querySelector('#party2');
+    select.add(newOption2,undefined);
+    
+ 
+    
+    defendants = defendants + 1
+    newOption = new Option('Def' + defendants)
+    select = document.querySelector('#party1');
+    select.add(newOption,undefined);
+    newOption2 = new Option('Def' + defendants)
+    select = document.querySelector('#party2');
+    select.add(newOption2,undefined);
+    defendants = defendants + 1
+    newOption = new Option('Def' + defendants)
+    select = document.querySelector('#party1');
+    select.add(newOption,undefined);
+    newOption2 = new Option('Def' + defendants)
+    select = document.querySelector('#party2');
+    select.add(newOption2,undefined);
+    defendants = defendants + 1
+    newOption = new Option('Def' + defendants)
+    select = document.querySelector('#party1');
+    select.add(newOption,undefined);
+    newOption2 = new Option('Def' + defendants)
+    select = document.querySelector('#party2');
+    select.add(newOption2,undefined);
+    defendants = defendants + 1
+    newOption = new Option('Def' + defendants)
+    select = document.querySelector('#party1');
+    select.add(newOption,undefined);
+    newOption2 = new Option('Def' + defendants)
+    select = document.querySelector('#party2');
+    select.add(newOption2,undefined);
+    defendants = defendants + 1
+    newOption = new Option('Def' + defendants)
+    select = document.querySelector('#party1');
+    select.add(newOption,undefined);
+    newOption2 = new Option('Def' + defendants)
+    select = document.querySelector('#party2');
+    select.add(newOption2,undefined);
+
+
+
+
+    document.getElementById('casename').innerHTML = "Case: 3:19-cv-02854-JRK"
+    document.getElementById('ps').innerHTML = document.getElementById('ps').innerHTML + "Plt1" +  ": " + "Sinmier, LLC" + "<br>";
+    document.getElementById('ds').innerHTML = document.getElementById('ds').innerHTML + "Def1" +  ": " + "Bankers" + "<br>";
+    document.getElementById('ds').innerHTML = document.getElementById('ds').innerHTML + "Def2" +  ": " + "Everest/EverSports" + "<br>";
+    document.getElementById('ds').innerHTML = document.getElementById('ds').innerHTML + "Def3" +  ": " + "Berkley" + "<br>";
+    document.getElementById('ds').innerHTML = document.getElementById('ds').innerHTML + "Def4" +  ": " + "Vintro" + "<br>";
+    document.getElementById('ds').innerHTML = document.getElementById('ds').innerHTML + "Def5" + ": " + "Grewal" + "<br>";
+}
 </script>
 
 
