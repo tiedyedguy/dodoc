@@ -1,6 +1,9 @@
 
   <!DOCTYPE html>
   <html lang="en">
+    <head>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    </head>
   <body>
  <script src="https://unpkg.com/gojs@2.2.20/release/go.js"></script> 
 
@@ -9,34 +12,92 @@
   <!-- The DIV for the Diagram needs an explicit size or else we won't see anything.
        This also adds a border to help see the edges of the viewport. -->
       <span id="casename" style="position:absolute;z-index:9;top:0;margin-left:auto;margin-right:auto;left:0;right:0;text-align:center;"></span>
+      <span id="legend" style="position:absolute;z-index:9;bottom:0;right:0;text-align:center;">Legend</span>
       <div id="pandd" style="Position:absolute;z-index:9;left:0;bottom: 0;;display:flex;flex-direction: row;gap:50px">
         <div id="ps"></div>
         <div id="ds"></div>
       </div>
   <div id="myDiagramDiv" style="border: 1px solid black; width: 100%; height:700px; position: relative; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);">
-  <canvas tabindex="0" width="398" height="398" style="position: absolute; top: 0px; left: 0px; z-index: 2; user-select: none; touch-action: none; width: 398px; height: 398px;">This text is displayed if your browser does not support the Canvas HTML element.</canvas><div style="position: absolute; overflow: auto; width: 398px; height: 398px; z-index: 1;">
+  <canvas tabindex="0" width="398" height="398" style="position: absolute; top: 0px; left: 0px; z-index: 2; user-select: none; touch-action: none; width: 398px; height: 398px;">This text is displayed if your browser does not support the Canvas HTML element.</canvas>
+  <div style="position: absolute; overflow: auto; width: 398px; height: 398px; z-index: 1;">
     <div style="position: absolute; width: 1px; height: 1px;">
     </div>
   </div>
-</div>
+  </div>
+  <div id="myLegendDiv" style="z-index:7;bottom:0;right:0;border: 1px solid black; width: 25%; height:300px; position: absolute; -webkit-tap-highlight-color: rgba(255, 255, 255, 0);">
+    <canvas tabindex="0" width="398" height="398" style="position: absolute; bottom: 0px; right: 0px; z-index: 7; user-select: none; touch-action: none; width: 398px; height: 398px;">This text is displayed if your browser does not support the Canvas HTML element.</canvas>
+    <div style="position: absolute; overflow: auto; width: 398px; height: 398px; z-index: 1;">
+      <div style="position: absolute; width: 1px; height: 1px;">
+      </div>
+    </div>
+  </div>
+
 </div>
   <br>
-  <input id ='inputcase' placeholder="Type Case Name Here" type="text"><button onClick="updateCase()">Set Case Name</button>
+  <input id ='inputcase' placeholder="Type Case Name Here" type="text"><button type="button" class="btn btn-primary" onClick="updateCase()">Set Case Name</button>
   <br><br>
-  <input id ='inputplt' placeholder="Type Plaintiff Name Here" type="text"><button onClick="addPlaintiff()">Add Plaintiff</button><br>
-  <input id ='inputdef' placeholder="Type Defendant Name Here" type="text"><button onClick = "addDefendant()">Add Defendant</button><br>
+  <input id ='inputplt' placeholder="Type Plaintiff Name Here" type="text"><button type="button" class="btn btn-primary" onClick="addPlaintiff()">Add Plaintiff</button><br>
+  <input id ='inputdef' placeholder="Type Defendant Name Here" type="text"><button type="button" class="btn btn-primary" onClick = "addDefendant()">Add Defendant</button><br>
   <br>
   Claim Between <select id="party1"></select> and <select id="party2"></select><br>
-  <button onclick="addClaim('normal')">Add Claim</button>
-  <button onclick="addClaim('cross')">Add CrossClaim</button>
-  <button onclick="addClaim('counter')">Add CounterClaim</button>
-  <button onclick="addClaim('3rd')">Add 3rdPartyClaim</button>
+  <button type="button" class="btn btn-primary" onclick="addClaim('normal')">Add Claim</button>
+  <button type="button" class="btn btn-primary" onclick="addClaim('cross')">Add CrossClaim</button>
+  <button type="button" class="btn btn-primary" onclick="addClaim('counter')">Add CounterClaim</button>
+  <button type="button" class="btn btn-primary" onclick="addClaim('3rd')">Add 3rdPartyClaim</button>
   <br><br>
-  <button onclick="demo()">Show a Demo of a case!</button>
+  <button type="button" class="btn btn-primary" onclick="demo()">Show a Demo of a case!</button>
 
 
 <script id="code">
 var $ = go.GraphObject.make;
+
+
+const myLegend =
+  new go.Diagram("myLegendDiv",  
+      {contentAlignment: go.Spot.Center,
+        layout: $(go.GridLayout, { wrappingColumn: 2,  spacing: go.Size.parse("90 10"),alignment: go.GridLayout.Position})});
+  
+ myLegend.nodeTemplate =
+  new go.Node("Auto")  // the Shape will go around the TextBlock
+    .add(new go.Shape("RoundedRectangle",
+      { strokeWidth: 0, fill: "white" })  // no border; default fill is white
+      .bind("fill", "color"))  // Shape.fill is bound to Node.data.color
+    .add(new go.TextBlock(
+      { margin: 8, font: "bold 14px sans-serif", stroke: '#333' })  // some room around the text
+      .bind("text", "key"));  // TextBlock.text is bound to Node.data.key
+
+
+  myLegend.linkTemplate =
+  $(go.Link,
+    { curve: go.Link.Bezier },  // Bezier curve
+    $(go.Shape,new go.Binding("strokeDashArray", "dash")),
+    $(go.Shape, { toArrow: "Standard" })
+  );
+
+
+
+myLegend.model = new go.GraphLinksModel(
+  [
+    { key: "Claim", color: "lightyellow"},
+    { key: "", color: "transparent"},
+    { key: "Cross", color: "lightyellow"},
+    { key: " ", color: "transparent"},
+    { key: "Counter", color: "lightyellow"},
+    { key: "  ", color: "transparent"},
+    { key: "3rd Party", color: "lightyellow"},
+    { key: "   ", color: "transparent"},
+  ],
+  [
+  { from: "Claim", to: "" },
+      { from: "Cross", to: " ", dash: [3,2]},
+      { from: "Counter", to: "  ", dash: [10,5]},
+      { from: "3rd Party", to: "   ", dash: [1,4]}
+
+  ]
+  
+  );
+
+
 const myDiagram =
   new go.Diagram("myDiagramDiv",  
       {contentAlignment: go.Spot.Center,
@@ -47,23 +108,19 @@ const myDiagram =
 
     myDiagram.groupTemplateMap.add("PLT",
       $(go.Group, "Auto",
+      $(go.TextBlock,"Plaintiff(s)",{verticalAlignment: go.Spot.Top, textAlign: "center"}), 
         { layout: $(go.LayeredDigraphLayout) },
-        $(go.Shape, { fill: "white", stroke: "lightgray" }),
-        $(go.Placeholder, { padding: 10 })
+        $(go.Placeholder, { padding: 50 }),
+        
       ));
-      myDiagram.groupTemplateMap.add("V",
-      $(go.Group, "Auto",
-        { 
-          layout: $(go.LayeredDigraphLayout) },
-        $(go.Shape, { fill: "white", stroke: "lightgray" }),
-        $(go.Placeholder, { padding: 10 })
-      ));
+      
 
     myDiagram.groupTemplateMap.add("DEF",
       $(go.Group, "Auto",
-        { layout: $(go.CircularLayout) },
-        $(go.Shape, { fill: "white", stroke: "lightgray" }),
-        $(go.Placeholder, { padding: 10 })
+      $(go.TextBlock,"Defendant(s)",{verticalAlignment: go.Spot.Top, textAlign: "center"}), 
+        { layout: $(go.CircularLayout, {spacing:75,startAngle:270}) },
+     //   $(go.Shape, { fill: "transparent", stroke: "lightgray" }),
+        $(go.Placeholder, { padding: 50 })
       ));
 
 // define a simple Node template
@@ -78,7 +135,6 @@ myDiagram.nodeTemplate =
 
 myDiagram.linkTemplate =
   $(go.Link,
- 
     { curve: go.Link.Bezier },  // Bezier curve
     $(go.Shape,new go.Binding("strokeDashArray", "dash")),
     $(go.Shape, { toArrow: "Standard" })
@@ -89,8 +145,8 @@ defendants = 0
 
 // create the model data that will be represented by Nodes and Links
 
-myDiagram.model = new go.GraphLinksModel([{key: "PLT", isGroup: true, category: "PLT"},{key:"V", isGroup:true,category: "V"},{key: "DEF", isGroup:true, category: "DEF"}]);
-myDiagram.model.addNodeData({key:"v.", color:"lightgrey",group:"V"});
+myDiagram.model = new go.GraphLinksModel([{key: "PLT", isGroup: true, category: "PLT"},{key: "DEF", isGroup:true, category: "DEF"}]);
+
 
 
 function updateCase() {
@@ -165,9 +221,9 @@ function demo() {
   myDiagram.model = new go.GraphLinksModel(
     [
       {key: "PLT", isGroup: true, category: "PLT"},
-      {key:"V", isGroup:true,category: "V"},
+      
       {key: "DEF", isGroup:true, category: "DEF"},
-      {key:"v.", color:"lightgrey",group:"V"},
+      
       { key: "Plt1", color: "lightgreen", group: "PLT" },
       { key: "Def1", color: "lightblue", group: "DEF" },
       { key: "Def2", color: "lightblue", group: "DEF" },
@@ -259,5 +315,6 @@ function demo() {
 
 
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
   </body>
   </html>
